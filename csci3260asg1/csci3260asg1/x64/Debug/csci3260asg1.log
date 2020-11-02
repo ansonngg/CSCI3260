@@ -1,0 +1,4 @@
+﻿  main.cpp
+C:\Users\tkure\source\repos\csci3260asg1\csci3260asg1\main.cpp(663,16): warning C4244: 'initializing': conversion from 'double' to 'float', possible loss of data
+C:\Users\tkure\source\repos\csci3260asg1\csci3260asg1\main.cpp(664,16): warning C4244: 'initializing': conversion from 'double' to 'float', possible loss of data
+  csci3260asg1.vcxproj -> C:\Users\tkure\source\repos\csci3260asg1\x64\Debug\csci3260asg1.exe
