@@ -18,13 +18,13 @@
     <None Include="FragmentShaderCode.glsl">
       <Filter>Source Files</Filter>
     </None>
-    <None Include="VertexShaderCode.glsl">
+    <None Include="ShadowFragmentShader.glsl">
       <Filter>Source Files</Filter>
     </None>
     <None Include="ShadowVertexShader.glsl">
       <Filter>Source Files</Filter>
     </None>
-    <None Include="ShadowFragmentShader.glsl">
+    <None Include="VertexShaderCode.glsl">
       <Filter>Source Files</Filter>
     </None>
   </ItemGroup>
@@ -32,18 +32,18 @@
     <ClCompile Include="main.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="Texture.cpp">
+    <ClCompile Include="Shader.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="Shader.cpp">
+    <ClCompile Include="Texture.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="Texture.h">
+    <ClInclude Include="Shader.h">
       <Filter>Source Files</Filter>
     </ClInclude>
-    <ClInclude Include="Shader.h">
+    <ClInclude Include="Texture.h">
       <Filter>Source Files</Filter>
     </ClInclude>
   </ItemGroup>

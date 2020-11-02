@@ -21,7 +21,7 @@
   <PropertyGroup Label="Globals">
     <VCProjectVersion>16.0</VCProjectVersion>
     <Keyword>Win32Proj</Keyword>
-    <ProjectGuid>{e41f2e76-a572-4143-876d-a324e49b7063}</ProjectGuid>
+    <ProjectGuid>{f6d3bb3b-cc9d-45d0-aa47-c1bf1a827889}</ProjectGuid>
     <RootNamespace>csci3260proj</RootNamespace>
     <WindowsTargetPlatformVersion>10.0</WindowsTargetPlatformVersion>
   </PropertyGroup>
@@ -120,7 +120,7 @@
     <Link>
       <SubSystem>Console</SubSystem>
       <GenerateDebugInformation>true</GenerateDebugInformation>
-      <AdditionalLibraryDirectories>C:\Users\tkure\source\repos\csci3260proj\csci3260proj\Dependencies\glm;C:\Users\tkure\source\repos\csci3260proj\csci3260proj\Dependencies\GLFW;C:\Users\tkure\source\repos\csci3260proj\csci3260proj\Dependencies\glew;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <AdditionalLibraryDirectories>C:\Users\tkure\source\CSCI3260\csci3260proj\csci3260proj\Dependencies\glm;C:\Users\tkure\source\CSCI3260\csci3260proj\csci3260proj\Dependencies\GLFW;C:\Users\tkure\source\CSCI3260\csci3260proj\csci3260proj\Dependencies\glew;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
       <AdditionalDependencies>opengl32.lib;glfw3.lib;glew32.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
   </ItemDefinitionGroup>

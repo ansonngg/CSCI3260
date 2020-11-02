@@ -21,7 +21,7 @@
   <PropertyGroup Label="Globals">
     <VCProjectVersion>16.0</VCProjectVersion>
     <Keyword>Win32Proj</Keyword>
-    <ProjectGuid>{067e282b-22de-4939-9a48-254acb185fc5}</ProjectGuid>
+    <ProjectGuid>{a98b2eac-6113-4a95-a81d-5b8cff17aa87}</ProjectGuid>
     <RootNamespace>csci3260asg1</RootNamespace>
     <WindowsTargetPlatformVersion>10.0</WindowsTargetPlatformVersion>
   </PropertyGroup>
@@ -120,7 +120,7 @@
     <Link>
       <SubSystem>Console</SubSystem>
       <GenerateDebugInformation>true</GenerateDebugInformation>
-      <AdditionalLibraryDirectories>C:\Users\tkure\source\repos\csci3260asg1\csci3260asg1\Dependencies\glm;C:\Users\tkure\source\repos\csci3260asg1\csci3260asg1\Dependencies\GLFW;C:\Users\tkure\source\repos\csci3260asg1\csci3260asg1\Dependencies\glew;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <AdditionalLibraryDirectories>C:\Users\tkure\source\CSCI3260\csci3260asg1\csci3260asg1\Dependencies\glm;C:\Users\tkure\source\CSCI3260\csci3260asg1\csci3260asg1\Dependencies\GLFW;C:\Users\tkure\source\CSCI3260\csci3260asg1\csci3260asg1\Dependencies\glew;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
       <AdditionalDependencies>opengl32.lib;glfw3.lib;glew32.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
   </ItemDefinitionGroup>
@@ -141,11 +141,11 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClCompile Include="main.cpp" />
-  </ItemGroup>
-  <ItemGroup>
     <None Include="FragmentShaderCode.glsl" />
     <None Include="VertexShaderCode.glsl" />
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="main.cpp" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

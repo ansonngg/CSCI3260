@@ -3,4 +3,4 @@
   Texture.cpp
   Generating Code...
 LINK : warning LNK4098: defaultlib 'MSVCRT' conflicts with use of other libs; use /NODEFAULTLIB:library
-  csci3260proj.vcxproj -> C:\Users\tkure\source\repos\csci3260proj\x64\Debug\csci3260proj.exe
+  csci3260proj.vcxproj -> C:\Users\tkure\source\CSCI3260\csci3260proj\x64\Debug\csci3260proj.exe
