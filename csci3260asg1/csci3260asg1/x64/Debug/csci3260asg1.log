@@ -1,0 +1,5 @@
+﻿  main.cpp
+C:\Users\tkure\source\repos\csci3260asg1\csci3260asg1\main.cpp(663,16): warning C4244: 'initializing': conversion from 'double' to 'float', possible loss of data
+C:\Users\tkure\source\repos\csci3260asg1\csci3260asg1\main.cpp(664,16): warning C4244: 'initializing': conversion from 'double' to 'float', possible loss of data
+LINK : warning LNK4098: defaultlib 'MSVCRT' conflicts with use of other libs; use /NODEFAULTLIB:library
+  csci3260asg1.vcxproj -> C:\Users\tkure\source\repos\csci3260asg1\x64\Debug\csci3260asg1.exe
