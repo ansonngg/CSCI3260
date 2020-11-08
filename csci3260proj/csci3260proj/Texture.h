@@ -4,7 +4,9 @@ class Texture
 {
 public:
 	void setupTexture(const char* texturePath);
+	void setupCubemap(const char** texturesFaces);
 	void bind(unsigned int slot) const;
+	void bindCubemap(unsigned int slot) const;
 	void unbind() const;
 
 private:

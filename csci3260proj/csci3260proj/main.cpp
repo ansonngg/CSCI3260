@@ -11,138 +11,19 @@ Student Name: NG Ka Wai
 
 #include "Shader.h"
 #include "Texture.h"
+#include "Model.h"
+#include "Draw.h"
 
-#include <iostream>
-#include <fstream>
-#include <vector>
-#include <map>
+Shader shader;
+Shader skyboxShader;
+
+// Camera
+glm::vec3 eye(0.0f, 2.0f, 10.0f);
+glm::vec3 center(0.0f, 0.0f, 2.0f);
 
 // screen setting
 const int SCR_WIDTH = 800;
 const int SCR_HEIGHT = 600;
-
-// struct for storing the obj file
-struct Vertex {
-	glm::vec3 position;
-	glm::vec2 uv;
-	glm::vec3 normal;
-};
-
-struct Model {
-	std::vector<Vertex> vertices;
-	std::vector<unsigned int> indices;
-};
-
-Model loadOBJ(const char* objPath)
-{
-	// function to load the obj file
-	// Note: this simple function cannot load all obj files.
-
-	struct V {
-		// struct for identify if a vertex has showed up
-		unsigned int index_position, index_uv, index_normal;
-		bool operator == (const V& v) const {
-			return index_position == v.index_position && index_uv == v.index_uv && index_normal == v.index_normal;
-		}
-		bool operator < (const V& v) const {
-			return (index_position < v.index_position) ||
-				(index_position == v.index_position && index_uv < v.index_uv) ||
-				(index_position == v.index_position && index_uv == v.index_uv && index_normal < v.index_normal);
-		}
-	};
-
-	std::vector<glm::vec3> temp_positions;
-	std::vector<glm::vec2> temp_uvs;
-	std::vector<glm::vec3> temp_normals;
-
-	std::map<V, unsigned int> temp_vertices;
-
-	Model model;
-	unsigned int num_vertices = 0;
-
-	std::cout << "\nLoading OBJ file " << objPath << "..." << std::endl;
-
-	std::ifstream file;
-	file.open(objPath);
-
-	// Check for Error
-	if (file.fail()) {
-		std::cerr << "Impossible to open the file! Do you use the right path? See Tutorial 6 for details" << std::endl;
-		exit(1);
-	}
-
-	while (!file.eof()) {
-		// process the object file
-		char lineHeader[128];
-		file >> lineHeader;
-
-		if (strcmp(lineHeader, "v") == 0) {
-			// geometric vertices
-			glm::vec3 position;
-			file >> position.x >> position.y >> position.z;
-			temp_positions.push_back(position);
-		}
-		else if (strcmp(lineHeader, "vt") == 0) {
-			// texture coordinates
-			glm::vec2 uv;
-			file >> uv.x >> uv.y;
-			temp_uvs.push_back(uv);
-		}
-		else if (strcmp(lineHeader, "vn") == 0) {
-			// vertex normals
-			glm::vec3 normal;
-			file >> normal.x >> normal.y >> normal.z;
-			temp_normals.push_back(normal);
-		}
-		else if (strcmp(lineHeader, "f") == 0) {
-			// Face elements
-			V vertices[3];
-			for (int i = 0; i < 3; i++) {
-				char ch;
-				file >> vertices[i].index_position >> ch >> vertices[i].index_uv >> ch >> vertices[i].index_normal;
-			}
-
-			// Check if there are more than three vertices in one face.
-			std::string redundency;
-			std::getline(file, redundency);
-			if (redundency.length() >= 5) {
-				std::cerr << "There may exist some errors while load the obj file. Error content: [" << redundency << " ]" << std::endl;
-				std::cerr << "Please note that we only support the faces drawing with triangles. There are more than three vertices in one face." << std::endl;
-				std::cerr << "Your obj file can't be read properly by our simple parser :-( Try exporting with other options." << std::endl;
-				exit(1);
-			}
-
-			for (int i = 0; i < 3; i++) {
-				if (temp_vertices.find(vertices[i]) == temp_vertices.end()) {
-					// the vertex never shows before
-					Vertex vertex;
-					vertex.position = temp_positions[vertices[i].index_position - 1];
-					vertex.uv = temp_uvs[vertices[i].index_uv - 1];
-					vertex.normal = temp_normals[vertices[i].index_normal - 1];
-
-					model.vertices.push_back(vertex);
-					model.indices.push_back(num_vertices);
-					temp_vertices[vertices[i]] = num_vertices;
-					num_vertices += 1;
-				}
-				else {
-					// reuse the existing vertex
-					unsigned int index = temp_vertices[vertices[i]];
-					model.indices.push_back(index);
-				}
-			} // for
-		} // else if
-		else {
-			// it's not a vertex, texture coordinate, normal or face
-			char stupidBuffer[1024];
-			file.getline(stupidBuffer, 1024);
-		}
-	}
-	file.close();
-
-	std::cout << "There are " << num_vertices << " vertices in the obj file.\n" << std::endl;
-	return model;
-}
 
 void get_OpenGL_info()
 {
@@ -155,11 +36,87 @@ void get_OpenGL_info()
 	std::cout << "OpenGL version: " << glversion << std::endl;
 }
 
+Texture universeSkybox;
+Model spacecraftObj = loadOBJ("objects/spacecraft.obj");
+Texture spacecraftTexture[2];
+
+GLuint vao[2];
+GLuint vbo[2];
+GLuint ebo[2];
+GLuint* buffers[] = { vao, vbo, ebo };
+
 void sendDataToOpenGL()
 {
-	//TODO
-	//Load objects and bind to VAO and VBO
-	//Load textures
+	// Generate buffers
+	glGenVertexArrays(2, vao);
+	glGenBuffers(2, vbo);
+	glGenBuffers(2, ebo);
+
+	// 0 Universe Skybox
+	const char* universeFaces[] = {
+		"textures/universe skybox/right.bmp",
+		"textures/universe skybox/left.bmp",
+		"textures/universe skybox/top.bmp",
+		"textures/universe skybox/bottom.bmp",
+		"textures/universe skybox/front.bmp",
+		"textures/universe skybox/back.bmp"
+	};
+	universeSkybox.setupCubemap(universeFaces);
+	float skyboxVertices[] = {
+		// positions          
+		-1.0f,  1.0f, -1.0f,
+		-1.0f, -1.0f, -1.0f,
+		 1.0f, -1.0f, -1.0f,
+		 1.0f, -1.0f, -1.0f,
+		 1.0f,  1.0f, -1.0f,
+		-1.0f,  1.0f, -1.0f,
+
+		-1.0f, -1.0f,  1.0f,
+		-1.0f, -1.0f, -1.0f,
+		-1.0f,  1.0f, -1.0f,
+		-1.0f,  1.0f, -1.0f,
+		-1.0f,  1.0f,  1.0f,
+		-1.0f, -1.0f,  1.0f,
+
+		 1.0f, -1.0f, -1.0f,
+		 1.0f, -1.0f,  1.0f,
+		 1.0f,  1.0f,  1.0f,
+		 1.0f,  1.0f,  1.0f,
+		 1.0f,  1.0f, -1.0f,
+		 1.0f, -1.0f, -1.0f,
+
+		-1.0f, -1.0f,  1.0f,
+		-1.0f,  1.0f,  1.0f,
+		 1.0f,  1.0f,  1.0f,
+		 1.0f,  1.0f,  1.0f,
+		 1.0f, -1.0f,  1.0f,
+		-1.0f, -1.0f,  1.0f,
+
+		-1.0f,  1.0f, -1.0f,
+		 1.0f,  1.0f, -1.0f,
+		 1.0f,  1.0f,  1.0f,
+		 1.0f,  1.0f,  1.0f,
+		-1.0f,  1.0f,  1.0f,
+		-1.0f,  1.0f, -1.0f,
+
+		-1.0f, -1.0f, -1.0f,
+		-1.0f, -1.0f,  1.0f,
+		 1.0f, -1.0f, -1.0f,
+		 1.0f, -1.0f, -1.0f,
+		-1.0f, -1.0f,  1.0f,
+		 1.0f, -1.0f,  1.0f
+	};
+	glBindVertexArray(vao[0]);
+	glBindBuffer(GL_ARRAY_BUFFER, vao[0]);
+	glBufferData(GL_ARRAY_BUFFER, sizeof(skyboxVertices), skyboxVertices, GL_STATIC_DRAW);
+	glEnableVertexAttribArray(0);
+	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 0, 0);
+	glBindVertexArray(0);
+
+	// 1 Spacecraft
+	spacecraftTexture[0].setupTexture("textures/spacecraftTexture.bmp");
+	spacecraftTexture[1].setupTexture("textures/leisure_spacecraftTexture.bmp");
+	Draw(buffers, 1, spacecraftObj);
 }
 
 void initializedGL(void) //run only once
@@ -171,8 +128,8 @@ void initializedGL(void) //run only once
 	get_OpenGL_info();
 	sendDataToOpenGL();
 
-	//TODO: set up the camera parameters	
-	//TODO: set up the vertex shader and fragment shader
+	shader.setupShader("VertexShaderCode.glsl", "FragmentShaderCode.glsl");
+	skyboxShader.setupShader("SkyboxVertexShader.glsl", "SkyboxFragmentShader.glsl");
 
 	glEnable(GL_DEPTH_TEST);
 	glEnable(GL_CULL_FACE);
@@ -180,12 +137,42 @@ void initializedGL(void) //run only once
 
 void paintGL(void)  //always run
 {
-	glClearColor(1.0f, 1.0f, 1.0f, 0.5f); //specify the background color, this is just an example
+	/* Skybox Part */
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-	//TODO:
-	//Set lighting information, such as position and color of lighting source
-	//Set transformation matrix
-	//Bind different textures
+	glDepthMask(GL_FALSE);
+	skyboxShader.use();
+
+	// viewMatrix
+	glm::mat4 viewMatrix = glm::lookAt(eye, center, glm::vec3(0.0f, 1.0f, 0.0f));
+	glm::mat4 skyboxViewMatrix = glm::mat4(glm::mat3(viewMatrix));
+	skyboxShader.setMat4("viewMatrix", skyboxViewMatrix);
+	// projectionMatrix
+	glm::mat4 projectionMatrix = glm::perspective(glm::radians(45.0f), (float)SCR_WIDTH / SCR_HEIGHT, 0.1f, 100.0f);
+	skyboxShader.setMat4("projectionMatrix", projectionMatrix);
+
+	// 0 Universe Skybox
+	glBindVertexArray(vao[0]);
+	universeSkybox.bindCubemap(0);
+	skyboxShader.setInt("skybox", 0);
+	glDrawArrays(GL_TRIANGLES, 0, 36);
+	glBindVertexArray(0);
+
+	/* Drawing Part */
+	glDepthMask(GL_TRUE);
+	shader.use();
+
+	// eyeWorldMatrix
+	glm::mat4 eyeWorldMatrix = projectionMatrix * viewMatrix;
+	shader.setMat4("eyeWorldMatrix", eyeWorldMatrix);
+
+	// 1 Spacecraft
+	glBindVertexArray(vao[1]);
+	spacecraftTexture[0].bind(0);
+	shader.setInt("material.myTexture", 0);
+	glm::mat4 modelMatrix = glm::scale(glm::mat4(1.0f), glm::vec3(0.01f, 0.01f, 0.01f));
+	shader.setMat4("modelMatrix", modelMatrix);
+	glDrawElements(GL_TRIANGLES, spacecraftObj.indices.size(), GL_UNSIGNED_INT, 0);
+	glBindVertexArray(0);
 }
 
 void framebuffer_size_callback(GLFWwindow* window, int width, int height)
@@ -267,9 +254,3 @@ int main(int argc, char* argv[])
 
 	return 0;
 }
-
-
-
-
-
-
