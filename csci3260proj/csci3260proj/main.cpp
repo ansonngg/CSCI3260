@@ -178,6 +178,9 @@ void sendDataToOpenGL()
 	planetTexture[0].setupTexture("textures/planetTexture.bmp");
 	planetTexture[1].setupTexture("textures/planetNormal.bmp");
 	Draw(buffers, 4, planetObj);
+	for (int i = 0; i < 10; i++) {
+		std::cout << planetObj.vertices[i * planetObj.vertices.size() / 10].tangent.x << ' ' << planetObj.vertices[i * planetObj.vertices.size() / 10].tangent.y << ' ' << planetObj.vertices[i * planetObj.vertices.size() / 10].tangent.z << std::endl;
+	}
 
 	// 5 Rock
 	rockTexture.setupTexture("textures/rockTexture.bmp");
@@ -213,13 +216,15 @@ void paintGL(void)  //always run
 	glDepthMask(GL_FALSE);
 	skyboxShader.use();
 
+	// modelMatrix
+	glm::mat4 modelMatrix(1.0f);
 	// viewMatrix
 	glm::mat4 viewMatrix = glm::lookAt(eye, center, glm::vec3(0.0f, 1.0f, 0.0f));
-	glm::mat4 skyboxViewMatrix = glm::mat4(glm::mat3(viewMatrix));
-	skyboxShader.setMat4("viewMatrix", skyboxViewMatrix);
 	// projectionMatrix
 	glm::mat4 projectionMatrix = glm::perspective(glm::radians(45.0f), (float)SCR_WIDTH / SCR_HEIGHT, 0.1f, 1000.0f);
-	skyboxShader.setMat4("projectionMatrix", projectionMatrix);
+	// skyboxMatrix
+	glm::mat4 skyboxMatrix = projectionMatrix * glm::mat4(glm::mat3(viewMatrix));
+	skyboxShader.setMat4("skyboxMatrix", skyboxMatrix);
 
 	// 0 Universe Skybox
 	glBindVertexArray(vao[0]);
@@ -235,6 +240,18 @@ void paintGL(void)  //always run
 	// eyeWorldMatrix
 	glm::mat4 eyeWorldMatrix = projectionMatrix * viewMatrix;
 	shader.setMat4("eyeWorldMatrix", eyeWorldMatrix);
+	// eyePosition
+	glm::vec3 eyePosition(eye);
+	shader.setVec3("eyePosition", eyePosition);
+
+	// Point light
+	shader.setVec3("pointLight.position", -50.0f, 0.0f, -100.0f);
+	shader.setFloat("pointLight.constant", 1.0f);
+	shader.setFloat("pointLight.linear", 0.0f);
+	shader.setFloat("pointLight.quadratic", 0.0f);
+	shader.setVec3("pointLight.ambient", 0.1f, 0.1f, 0.1f);
+	shader.setVec3("pointLight.diffuse", 1.0f, 1.0f, 1.0f);
+	shader.setVec3("pointLight.specular", 1.0f, 1.0f, 1.0f);
 
 	// Time
 	float currentFrame = glfwGetTime();
@@ -293,7 +310,8 @@ void paintGL(void)  //always run
 	spacecraftTexture[0].bind(0);
 	shader.setInt("material.myTexture", 0);
 	shader.setInt("normalMappingFlag", 0);
-	glm::mat4 modelMatrix = glm::translate(glm::mat4(1.0f), spacecraftPos);
+	shader.setFloat("material.shininess", 50.0f);
+	modelMatrix = glm::translate(glm::mat4(1.0f), spacecraftPos);
 	modelMatrix = glm::rotate(modelMatrix, glm::radians(90.0f) - spacecraftAngle, glm::vec3(0.0f, 1.0f, 0.0f));
 	modelMatrix = glm::scale(modelMatrix, glm::vec3(0.01f, 0.01f, 0.01f));
 	shader.setMat4("modelMatrix", modelMatrix);
@@ -305,6 +323,7 @@ void paintGL(void)  //always run
 	alienTexture.bind(0);
 	shader.setInt("material.myTexture", 0);
 	shader.setInt("normalMappingFlag", 0);
+	shader.setFloat("material.shininess", 20.0f);
 	modelMatrix = glm::translate(glm::mat4(1.0f), glm::vec3(30.0f, 5.14f, 100.0f));
 	modelMatrix = glm::rotate(modelMatrix, glm::radians(180.0f), glm::vec3(0.0f, 1.0f, 0.0f));
 	modelMatrix = glm::scale(modelMatrix, glm::vec3(2.0f));
@@ -317,6 +336,7 @@ void paintGL(void)  //always run
 	alienTexture.bind(0);
 	shader.setInt("material.myTexture", 0);
 	shader.setInt("normalMappingFlag", 0);
+	shader.setFloat("material.shininess", 20.0f);
 	modelMatrix = glm::translate(glm::mat4(1.0f), glm::vec3(-30.0f, 5.14f, 200.0f));
 	modelMatrix = glm::rotate(modelMatrix, glm::radians(180.0f), glm::vec3(0.0f, 1.0f, 0.0f));
 	modelMatrix = glm::scale(modelMatrix, glm::vec3(2.0f));
@@ -329,6 +349,7 @@ void paintGL(void)  //always run
 	alienTexture.bind(0);
 	shader.setInt("material.myTexture", 0);
 	shader.setInt("normalMappingFlag", 0);
+	shader.setFloat("material.shininess", 20.0f);
 	modelMatrix = glm::translate(glm::mat4(1.0f), glm::vec3(30.0f, 5.14f, 300.0f));
 	modelMatrix = glm::rotate(modelMatrix, glm::radians(180.0f), glm::vec3(0.0f, 1.0f, 0.0f));
 	modelMatrix = glm::scale(modelMatrix, glm::vec3(2.0f));
@@ -342,6 +363,7 @@ void paintGL(void)  //always run
 	vehicleTexture[0].bind(0);
 	shader.setInt("material.myTexture", 0);
 	shader.setInt("normalMappingFlag", 0);
+	shader.setFloat("material.shininess", 50.0f);
 	modelMatrix = glm::translate(glm::mat4(1.0f), glm::vec3(30.0f, 0.0f, 100.0f));
 	modelMatrix = glm::rotate(modelMatrix, vehicleAngle, glm::vec3(0.0f, 1.0f, 0.0f));
 	modelMatrix = glm::scale(modelMatrix, glm::vec3(2.0f));
@@ -354,6 +376,7 @@ void paintGL(void)  //always run
 	vehicleTexture[0].bind(0);
 	shader.setInt("material.myTexture", 0);
 	shader.setInt("normalMappingFlag", 0);
+	shader.setFloat("material.shininess", 50.0f);
 	modelMatrix = glm::translate(glm::mat4(1.0f), glm::vec3(-30.0f, 0.0f, 200.0f));
 	modelMatrix = glm::rotate(modelMatrix, vehicleAngle, glm::vec3(0.0f, 1.0f, 0.0f));
 	modelMatrix = glm::scale(modelMatrix, glm::vec3(2.0f));
@@ -366,6 +389,7 @@ void paintGL(void)  //always run
 	vehicleTexture[0].bind(0);
 	shader.setInt("material.myTexture", 0);
 	shader.setInt("normalMappingFlag", 0);
+	shader.setFloat("material.shininess", 50.0f);
 	modelMatrix = glm::translate(glm::mat4(1.0f), glm::vec3(30.0f, 0.0f, 300.0f));
 	modelMatrix = glm::rotate(modelMatrix, vehicleAngle, glm::vec3(0.0f, 1.0f, 0.0f));
 	modelMatrix = glm::scale(modelMatrix, glm::vec3(2.0f));
@@ -381,6 +405,7 @@ void paintGL(void)  //always run
 	planetTexture[1].bind(1);
 	shader.setInt("material.myNormalTexture", 1);
 	shader.setInt("normalMappingFlag", 1);
+	shader.setFloat("material.shininess", 20.0f);
 	modelMatrix = glm::translate(glm::mat4(1.0f), glm::vec3(0.0f, -15.0f, 500.0f));
 	modelMatrix = glm::rotate(modelMatrix, planetAngle, glm::vec3(0.0f, 1.0f, 0.0f));
 	modelMatrix = glm::scale(modelMatrix, glm::vec3(15.0f));
@@ -393,6 +418,7 @@ void paintGL(void)  //always run
 	rockTexture.bind(0);
 	shader.setInt("material.myTexture", 0);
 	shader.setInt("normalMappingFlag", 0);
+	shader.setFloat("material.shininess", 10.0f);
 	glm::mat4 modelMatrixTemp = glm::translate(glm::mat4(1.0f), glm::vec3(0.0f, -5.0f, 500.0f));
 	modelMatrixTemp = glm::rotate(modelMatrixTemp, rockAngle, glm::vec3(0.0f, 1.0f, 0.0f));
 	glm::mat4 selfRotateMatrix = glm::rotate(glm::mat4(1.0f), rockSelfAngle, glm::vec3(0.4f, 0.6f, 0.8f));
@@ -408,6 +434,7 @@ void paintGL(void)  //always run
 	chickenTexture.bind(0);
 	shader.setInt("material.myTexture", 0);
 	shader.setInt("normalMappingFlag", 0);
+	shader.setFloat("material.shininess", 20.0f);
 	modelMatrix = glm::translate(glm::mat4(1.0f), glm::vec3(15.0f, 3.0f, 100.0f));
 	modelMatrix = glm::rotate(modelMatrix, glm::radians(90.0f), glm::vec3(1.0f, 0.0f, 0.0f));
 	modelMatrix = glm::scale(modelMatrix, glm::vec3(0.02f));
@@ -420,6 +447,7 @@ void paintGL(void)  //always run
 	chickenTexture.bind(0);
 	shader.setInt("material.myTexture", 0);
 	shader.setInt("normalMappingFlag", 0);
+	shader.setFloat("material.shininess", 20.0f);
 	modelMatrix = glm::translate(glm::mat4(1.0f), glm::vec3(-15.0f, 3.0f, 200.0f));
 	modelMatrix = glm::rotate(modelMatrix, glm::radians(90.0f), glm::vec3(1.0f, 0.0f, 0.0f));
 	modelMatrix = glm::scale(modelMatrix, glm::vec3(0.02f));
@@ -432,6 +460,7 @@ void paintGL(void)  //always run
 	chickenTexture.bind(0);
 	shader.setInt("material.myTexture", 0);
 	shader.setInt("normalMappingFlag", 0);
+	shader.setFloat("material.shininess", 20.0f);
 	modelMatrix = glm::translate(glm::mat4(1.0f), glm::vec3(15.0f, 3.0f, 300.0f));
 	modelMatrix = glm::rotate(modelMatrix, glm::radians(90.0f), glm::vec3(1.0f, 0.0f, 0.0f));
 	modelMatrix = glm::scale(modelMatrix, glm::vec3(0.02f));

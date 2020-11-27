@@ -42,12 +42,12 @@ Model loadOBJ(const char* objPath)
 		std::cerr << "Impossible to open the file! Do you use the right path? See Tutorial 6 for details" << std::endl;
 		exit(1);
 	}
-
+	
 	while (!file.eof()) {
 		// process the object file
 		char lineHeader[128];
 		file >> lineHeader;
-
+		
 		if (strcmp(lineHeader, "v") == 0) {
 			// geometric vertices
 			glm::vec3 position;
@@ -83,6 +83,15 @@ Model loadOBJ(const char* objPath)
 				std::cerr << "Your obj file can't be read properly by our simple parser :-( Try exporting with other options." << std::endl;
 				exit(1);
 			} */
+			
+			glm::vec3 deltaPos1 = temp_positions[vertices[1].index_position - 1] - temp_positions[vertices[0].index_position - 1];
+			glm::vec3 deltaPos2 = temp_positions[vertices[2].index_position - 1] - temp_positions[vertices[0].index_position - 1];
+			glm::vec2 deltaUV1 = temp_uvs[vertices[1].index_uv - 1] - temp_uvs[vertices[0].index_uv - 1];
+			glm::vec2 deltaUV2 = temp_uvs[vertices[2].index_uv - 1] - temp_uvs[vertices[0].index_uv - 1];
+
+			float r = 1.0f / (deltaUV1.x * deltaUV2.y - deltaUV1.y * deltaUV2.x);
+			glm::vec3 tangent = (deltaPos1 * deltaUV2.y - deltaPos2 * deltaUV1.y) * r;
+			glm::vec3 bitangent = (deltaPos2 * deltaUV1.x - deltaPos1 * deltaUV2.x) * r;
 
 			for (int i = 0; i < 3; i++) {
 				if (temp_vertices.find(vertices[i]) == temp_vertices.end()) {
@@ -91,6 +100,8 @@ Model loadOBJ(const char* objPath)
 					vertex.position = temp_positions[vertices[i].index_position - 1];
 					vertex.uv = temp_uvs[vertices[i].index_uv - 1];
 					vertex.normal = temp_normals[vertices[i].index_normal - 1];
+					vertex.tangent = tangent;
+					vertex.bitangent = bitangent;
 
 					model.vertices.push_back(vertex);
 					model.indices.push_back(num_vertices);
@@ -100,6 +111,8 @@ Model loadOBJ(const char* objPath)
 				else {
 					// reuse the existing vertex
 					unsigned int index = temp_vertices[vertices[i]];
+					model.vertices[index].tangent += tangent;
+					model.vertices[index].bitangent += bitangent;
 					model.indices.push_back(index);
 				}
 			} // for
