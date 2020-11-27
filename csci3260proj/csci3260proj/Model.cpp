@@ -75,14 +75,14 @@ Model loadOBJ(const char* objPath)
 			}
 
 			// Check if there are more than three vertices in one face.
-			std::string redundency;
+			/* std::string redundency;
 			std::getline(file, redundency);
 			if (redundency.length() >= 5) {
 				std::cerr << "There may exist some errors while load the obj file. Error content: [" << redundency << " ]" << std::endl;
 				std::cerr << "Please note that we only support the faces drawing with triangles. There are more than three vertices in one face." << std::endl;
 				std::cerr << "Your obj file can't be read properly by our simple parser :-( Try exporting with other options." << std::endl;
 				exit(1);
-			}
+			} */
 
 			for (int i = 0; i < 3; i++) {
 				if (temp_vertices.find(vertices[i]) == temp_vertices.end()) {

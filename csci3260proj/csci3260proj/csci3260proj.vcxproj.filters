@@ -21,6 +21,12 @@
     <None Include="VertexShaderCode.glsl">
       <Filter>Source Files</Filter>
     </None>
+    <None Include="SkyboxVertexShader.glsl">
+      <Filter>Source Files</Filter>
+    </None>
+    <None Include="SkyboxFragmentShader.glsl">
+      <Filter>Source Files</Filter>
+    </None>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="main.cpp">
@@ -32,12 +38,24 @@
     <ClCompile Include="Texture.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="Model.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="Draw.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Shader.h">
       <Filter>Source Files</Filter>
     </ClInclude>
     <ClInclude Include="Texture.h">
+      <Filter>Source Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Model.h">
+      <Filter>Source Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Draw.h">
       <Filter>Source Files</Filter>
     </ClInclude>
   </ItemGroup>
