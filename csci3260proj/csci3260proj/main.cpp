@@ -42,6 +42,10 @@ float rockRotate = 0.1f;
 float rockSelfAngle = 0.0f;
 float rockSelfRotate = 1.0f;
 
+// Collision
+bool collideFood1 = false, collideFood2 = false, collideFood3 = false;
+bool collideVehicle1 = false, collideVehicle2 = false, collideVehicle3 = false;
+
 // Time
 float deltaTime = 0.0f;
 float lastFrame = 0.0f;
@@ -86,18 +90,22 @@ Model rockObj = loadOBJ("objects/rock.obj");
 Texture rockTexture;
 Model chickenObj = loadOBJ("objects/chicken.obj");
 Texture chickenTexture;
+Model breadObj = loadOBJ("objects/bread.obj");
+Texture breadTexture[2];
+Model croissantObj = loadOBJ("objects/croissant.obj");
+Texture croissantTexture[2];
 
-GLuint vao[7];
-GLuint vbo[7];
-GLuint ebo[7];
+GLuint vao[9];
+GLuint vbo[9];
+GLuint ebo[9];
 GLuint* buffers[] = { vao, vbo, ebo };
 
 void sendDataToOpenGL()
 {
 	// Generate buffers
-	glGenVertexArrays(7, vao);
-	glGenBuffers(7, vbo);
-	glGenBuffers(7, ebo);
+	glGenVertexArrays(9, vao);
+	glGenBuffers(9, vbo);
+	glGenBuffers(9, ebo);
 
 	// 0 Universe Skybox
 	const char* universeFaces[] = {
@@ -178,9 +186,6 @@ void sendDataToOpenGL()
 	planetTexture[0].setupTexture("textures/planetTexture.bmp");
 	planetTexture[1].setupTexture("textures/planetNormal.bmp");
 	Draw(buffers, 4, planetObj);
-	for (int i = 0; i < 10; i++) {
-		std::cout << planetObj.vertices[i * planetObj.vertices.size() / 10].tangent.x << ' ' << planetObj.vertices[i * planetObj.vertices.size() / 10].tangent.y << ' ' << planetObj.vertices[i * planetObj.vertices.size() / 10].tangent.z << std::endl;
-	}
 
 	// 5 Rock
 	rockTexture.setupTexture("textures/rockTexture.bmp");
@@ -189,6 +194,16 @@ void sendDataToOpenGL()
 	// 6 Chicken
 	chickenTexture.setupTexture("textures/chickenTexture.bmp");
 	Draw(buffers, 6, chickenObj);
+
+	// 7 Bread
+	breadTexture[0].setupTexture("textures/breadTexture.png");
+	breadTexture[1].setupTexture("textures/breadNormal.png");
+	Draw(buffers, 7, breadObj);
+
+	// 8 Croissant
+	croissantTexture[0].setupTexture("textures/croissantTexture.png");
+	croissantTexture[1].setupTexture("textures/croissantNormal.png");
+	Draw(buffers, 8, croissantObj);
 }
 
 void initializedGL(void) //run only once
@@ -207,6 +222,12 @@ void initializedGL(void) //run only once
 	glEnable(GL_CULL_FACE);
 
 	CreateRockModel(rockModelMatrices, rockAmount);
+}
+
+bool collisionDetection(glm::vec3 vecA, glm::vec3 vecB, bool isFood)
+{
+	float threshold = isFood ? 5.0f : 12.0f;
+	return glm::distance(vecA, vecB) < threshold ? true : false;
 }
 
 void paintGL(void)  //always run
@@ -252,6 +273,17 @@ void paintGL(void)  //always run
 	shader.setVec3("pointLight.ambient", 0.1f, 0.1f, 0.1f);
 	shader.setVec3("pointLight.diffuse", 1.0f, 1.0f, 1.0f);
 	shader.setVec3("pointLight.specular", 1.0f, 1.0f, 1.0f);
+	// Spot light
+	shader.setVec3("spotLight.position", spacecraftPos);
+	shader.setVec3("spotLight.direction", glm::cos(spacecraftAngle), 0.0f, glm::sin(spacecraftAngle));
+	shader.setFloat("spotLight.cutOff", 0.9978f);
+	shader.setFloat("spotLight.outerCutOff", 0.953f);
+	shader.setFloat("spotLight.constant", 1.0f);
+	shader.setFloat("spotLight.linear", 0.0f);
+	shader.setFloat("spotLight.quadratic", 0.001f);
+	shader.setVec3("spotLight.ambient", 0.01f, 0.01f, 0.01f);
+	shader.setVec3("spotLight.diffuse", 1.0f, 1.0f, 1.0f);
+	shader.setVec3("spotLight.specular", 1.0f, 1.0f, 1.0f);
 
 	// Time
 	float currentFrame = glfwGetTime();
@@ -274,7 +306,7 @@ void paintGL(void)  //always run
 		ldiff += ldiffTemp;
 	if (keyboardCtl.RIGHT)
 		ldiff -= ldiffTemp;
-	// Totall difference
+	// Total difference
 	glm::vec2 fldiff = fdiff + ldiff;
 	// Normalize if moving diagonally
 	if ((keyboardCtl.UP || keyboardCtl.DOWN) && (keyboardCtl.LEFT || keyboardCtl.RIGHT))
@@ -307,7 +339,10 @@ void paintGL(void)  //always run
 
 	// 1 Spacecraft
 	glBindVertexArray(vao[1]);
-	spacecraftTexture[0].bind(0);
+	if (collideVehicle1 && collideVehicle2 && collideVehicle3)
+		spacecraftTexture[1].bind(0);
+	else
+		spacecraftTexture[0].bind(0);
 	shader.setInt("material.myTexture", 0);
 	shader.setInt("normalMappingFlag", 0);
 	shader.setFloat("material.shininess", 50.0f);
@@ -359,8 +394,13 @@ void paintGL(void)  //always run
 
 	// 3 Vehicle 1
 	glDisable(GL_CULL_FACE);
+	if (!collideVehicle1 && collideFood1 && collisionDetection(spacecraftPos, glm::vec3(30.0f, 0.0f, 100.0f), false))
+		collideVehicle1 = true;
 	glBindVertexArray(vao[3]);
-	vehicleTexture[0].bind(0);
+	if(collideVehicle1)
+		vehicleTexture[1].bind(0);
+	else
+		vehicleTexture[0].bind(0);
 	shader.setInt("material.myTexture", 0);
 	shader.setInt("normalMappingFlag", 0);
 	shader.setFloat("material.shininess", 50.0f);
@@ -372,8 +412,13 @@ void paintGL(void)  //always run
 	glBindVertexArray(0);
 
 	// 3 Vehicle 2
+	if (!collideVehicle2 && collideFood2 && collisionDetection(spacecraftPos, glm::vec3(-30.0f, 0.0f, 200.0f), false))
+		collideVehicle2 = true;
 	glBindVertexArray(vao[3]);
-	vehicleTexture[0].bind(0);
+	if (collideVehicle2)
+		vehicleTexture[1].bind(0);
+	else
+		vehicleTexture[0].bind(0);
 	shader.setInt("material.myTexture", 0);
 	shader.setInt("normalMappingFlag", 0);
 	shader.setFloat("material.shininess", 50.0f);
@@ -385,8 +430,13 @@ void paintGL(void)  //always run
 	glBindVertexArray(0);
 
 	// 3 Vehicle 3
+	if (!collideVehicle3 && collideFood3 && collisionDetection(spacecraftPos, glm::vec3(30.0f, 0.0f, 300.0f), false))
+		collideVehicle3 = true;
 	glBindVertexArray(vao[3]);
-	vehicleTexture[0].bind(0);
+	if (collideVehicle3)
+		vehicleTexture[1].bind(0);
+	else
+		vehicleTexture[0].bind(0);
 	shader.setInt("material.myTexture", 0);
 	shader.setInt("normalMappingFlag", 0);
 	shader.setFloat("material.shininess", 50.0f);
@@ -430,43 +480,57 @@ void paintGL(void)  //always run
 	glBindVertexArray(0);
 
 	// 6 Chicken 1
-	glBindVertexArray(vao[6]);
-	chickenTexture.bind(0);
-	shader.setInt("material.myTexture", 0);
-	shader.setInt("normalMappingFlag", 0);
-	shader.setFloat("material.shininess", 20.0f);
-	modelMatrix = glm::translate(glm::mat4(1.0f), glm::vec3(15.0f, 3.0f, 100.0f));
-	modelMatrix = glm::rotate(modelMatrix, glm::radians(90.0f), glm::vec3(1.0f, 0.0f, 0.0f));
-	modelMatrix = glm::scale(modelMatrix, glm::vec3(0.02f));
-	shader.setMat4("modelMatrix", modelMatrix);
-	glDrawElements(GL_TRIANGLES, chickenObj.indices.size(), GL_UNSIGNED_INT, 0);
-	glBindVertexArray(0);
+	if (!collideFood1 && collisionDetection(spacecraftPos, glm::vec3(15.0f, 3.0f, 100.0f), true))
+		collideFood1 = true;
+	if (!collideFood1) {
+		glBindVertexArray(vao[6]);
+		chickenTexture.bind(0);
+		shader.setInt("material.myTexture", 0);
+		shader.setInt("normalMappingFlag", 0);
+		shader.setFloat("material.shininess", 20.0f);
+		modelMatrix = glm::translate(glm::mat4(1.0f), glm::vec3(15.0f, 3.0f, 100.0f));
+		modelMatrix = glm::rotate(modelMatrix, glm::radians(90.0f), glm::vec3(1.0f, 0.0f, 0.0f));
+		modelMatrix = glm::scale(modelMatrix, glm::vec3(0.02f));
+		shader.setMat4("modelMatrix", modelMatrix);
+		glDrawElements(GL_TRIANGLES, chickenObj.indices.size(), GL_UNSIGNED_INT, 0);
+		glBindVertexArray(0);
+	}
 
-	// 6 Chicken 2
-	glBindVertexArray(vao[6]);
-	chickenTexture.bind(0);
-	shader.setInt("material.myTexture", 0);
-	shader.setInt("normalMappingFlag", 0);
-	shader.setFloat("material.shininess", 20.0f);
-	modelMatrix = glm::translate(glm::mat4(1.0f), glm::vec3(-15.0f, 3.0f, 200.0f));
-	modelMatrix = glm::rotate(modelMatrix, glm::radians(90.0f), glm::vec3(1.0f, 0.0f, 0.0f));
-	modelMatrix = glm::scale(modelMatrix, glm::vec3(0.02f));
-	shader.setMat4("modelMatrix", modelMatrix);
-	glDrawElements(GL_TRIANGLES, chickenObj.indices.size(), GL_UNSIGNED_INT, 0);
-	glBindVertexArray(0);
-
-	// 6 Chicken 3
-	glBindVertexArray(vao[6]);
-	chickenTexture.bind(0);
-	shader.setInt("material.myTexture", 0);
-	shader.setInt("normalMappingFlag", 0);
-	shader.setFloat("material.shininess", 20.0f);
-	modelMatrix = glm::translate(glm::mat4(1.0f), glm::vec3(15.0f, 3.0f, 300.0f));
-	modelMatrix = glm::rotate(modelMatrix, glm::radians(90.0f), glm::vec3(1.0f, 0.0f, 0.0f));
-	modelMatrix = glm::scale(modelMatrix, glm::vec3(0.02f));
-	shader.setMat4("modelMatrix", modelMatrix);
-	glDrawElements(GL_TRIANGLES, chickenObj.indices.size(), GL_UNSIGNED_INT, 0);
-	glBindVertexArray(0);
+	// 7 Bread
+	if (!collideFood2 && collisionDetection(spacecraftPos, glm::vec3(-15.0f, 3.0f, 200.0f), true))
+		collideFood2 = true;
+	if (!collideFood2) {
+		glBindVertexArray(vao[7]);
+		breadTexture[0].bind(0);
+		shader.setInt("material.myTexture", 0);
+		breadTexture[1].bind(1);
+		shader.setInt("material.myNormalTexture", 1);
+		shader.setInt("normalMappingFlag", 1);
+		shader.setFloat("material.shininess", 10.0f);
+		modelMatrix = glm::translate(glm::mat4(1.0f), glm::vec3(-15.0f, 1.0f, 200.0f));
+		modelMatrix = glm::scale(modelMatrix, glm::vec3(0.5f));
+		shader.setMat4("modelMatrix", modelMatrix);
+		glDrawElements(GL_TRIANGLES, breadObj.indices.size(), GL_UNSIGNED_INT, 0);
+		glBindVertexArray(0);
+	}
+	
+	// 8 Croissant
+	if (!collideFood3 && collisionDetection(spacecraftPos, glm::vec3(15.0f, 3.0f, 300.0f), true))
+		collideFood3 = true;
+	if (!collideFood3) {
+		glBindVertexArray(vao[8]);
+		croissantTexture[0].bind(0);
+		shader.setInt("material.myTexture", 0);
+		croissantTexture[1].bind(1);
+		shader.setInt("material.myNormalTexture", 1);
+		shader.setInt("normalMappingFlag", 1);
+		shader.setFloat("material.shininess", 20.0f);
+		modelMatrix = glm::translate(glm::mat4(1.0f), glm::vec3(15.0f, 1.0f, 300.0f));
+		modelMatrix = glm::rotate(modelMatrix, -glm::radians(90.0f), glm::vec3(1.0f, 0.0f, 0.0f));
+		shader.setMat4("modelMatrix", modelMatrix);
+		glDrawElements(GL_TRIANGLES, croissantObj.indices.size(), GL_UNSIGNED_INT, 0);
+		glBindVertexArray(0);
+	}
 }
 
 void framebuffer_size_callback(GLFWwindow* window, int width, int height)
@@ -553,7 +617,7 @@ int main(int argc, char* argv[])
 #endif
 
 	/* Create a windowed mode window and its OpenGL context */
-	window = glfwCreateWindow(SCR_WIDTH, SCR_HEIGHT, "Assignment 2", NULL, NULL);
+	window = glfwCreateWindow(SCR_WIDTH, SCR_HEIGHT, "Course Project", NULL, NULL);
 	if (!window) {
 		std::cout << "Failed to create GLFW window" << std::endl;
 		glfwTerminate();
